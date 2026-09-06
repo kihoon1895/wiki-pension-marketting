@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WIKI 퇴직연금 — 보험계리법인이 만든 퇴직연금 관리 시스템</title>
+<meta name="description" content="퇴직급여채무 산출(K-IFRS 1019), 재정검증·부담금 시뮬레이션, DC 부담금·납부 관리, 법정 의무 캘린더까지. 계리법인이 직접 만든 퇴직연금 관리 시스템.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f2f2; --surface:#eae9e9; --ink:#201e1d;
+    --accent:#ec3013; --accent-hover:#dd2b0f; --accent-700:#ae1800; --accent-100:#fff2ef;
+    --divider:rgba(32,30,29,.40);
+    --n300:#d7d3d3; --n400:#bab6b6; --n500:#9b9797; --n600:#7d7979; --n700:#605d5d; --n800:#444141;
+    --font:"Archivo","Noto Sans KR","Noto Sans CJK KR",sans-serif;
+  }
+  *{box-sizing:border-box;border-radius:0 !important}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--font);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  a{color:inherit;text-decoration:none}
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  h1,h2,h3,h4{margin:0;font-family:var(--font);font-weight:800;letter-spacing:-.01em}
+  h1{font-size:38px;line-height:1.2}
+  h2{font-size:28px;line-height:1.25}
+  h3{font-size:18px;line-height:1.35}
+  p{margin:0}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;font:700 14px var(--font);border:1px solid var(--divider);background:transparent;color:var(--ink);cursor:pointer;white-space:nowrap;transition:background .12s}
+  .btn:hover{background:color-mix(in srgb,var(--ink) 7%,transparent)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+  .btn-primary:hover{background:var(--accent-hover)}
+  .btn-primary:active{background:var(--accent-700)}
+  .tag{display:inline-block;padding:2px 8px;font:700 11px var(--font);border:1px solid var(--divider);white-space:nowrap}
+  .tag-accent{border-color:var(--accent);color:var(--accent-700)}
+  .tag-fill{background:var(--n800);color:var(--bg);border-color:var(--n800)}
+  .rule{height:2px;background:var(--divider)}
+  .rule-1{height:1px;background:var(--divider)}
+  .caption{font-size:12px;color:var(--n700)}
+  section{padding:72px 0}
+
+  /* ── 상단 바 ── */
+  header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:2px solid var(--divider)}
+  .topbar{display:flex;align-items:center;gap:28px;padding:14px 0}
+  .brand{display:flex;flex-direction:column;line-height:1.1}
+  .brand b{font:800 17px var(--font)}
+  .brand span{font:400 11px var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--n700);margin-top:3px}
+  nav{display:flex;gap:22px;margin-left:12px}
+  nav a{font-weight:700;font-size:14px;padding:6px 0;border-bottom:3px solid transparent}
+  nav a:hover{border-bottom-color:var(--accent)}
+  .topbar .actions{margin-left:auto;display:flex;gap:10px}
+
+  /* ── 히어로 ── */
+  .hero{padding:72px 0 64px}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:48px;align-items:start}
+  .hero .kicker{font:700 13px var(--font);color:var(--accent-700);margin-bottom:18px}
+  .hero p.lead{font-size:17px;line-height:1.6;margin:22px 0 30px;max-width:34em;color:var(--n800)}
+  .hero .cta{display:flex;gap:10px;flex-wrap:wrap}
+  .hero .facts{display:grid;grid-template-columns:repeat(3,1fr);margin-top:40px;border-top:1px solid var(--divider);border-bottom:1px solid var(--divider)}
+  .hero .facts div{padding:14px 16px 14px 0}
+  .hero .facts div+div{border-left:1px solid var(--divider);padding-left:16px}
+  .hero .facts b{display:block;font:800 20px var(--font);white-space:nowrap}
+  .hero .facts span{font-size:12px;color:var(--n700)}
+
+  /* 화면 축소본 — 히어로의 '한 가지' */
+  .shot{border:2px solid var(--divider);background:var(--bg);font-size:12px;box-shadow:none}
+  .shot .bar{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:2px solid var(--divider)}
+  .shot .bar b{font:800 13px var(--font)}
+  .shot .bar .r{margin-left:auto;display:flex;gap:6px}
+  .shot .bar .r i{display:inline-block;padding:3px 8px;border:1px solid var(--divider);font-style:normal;font-size:10px;font-weight:700}
+  .shot .strip{display:flex;align-items:center;gap:14px;padding:9px 14px;background:var(--accent);color:var(--bg)}
+  .shot .strip .k{font:800 10px var(--font);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .shot .strip .m{font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shot .strip .b{padding:3px 9px;background:var(--bg);color:var(--accent-700);font-weight:800;font-size:10px;white-space:nowrap}
+  .shot .body{display:flex}
+  .shot .rail{flex:0 0 150px;border-right:2px solid var(--divider);padding:10px 0}
+  .shot .rail .h{font:700 10px var(--font);color:var(--n700);padding:4px 12px}
+  .shot .rail .i{display:flex;align-items:center;gap:8px;padding:6px 12px;border-top:1px solid var(--divider);font-size:11px;white-space:nowrap}
+  .shot .rail .i.on{font-weight:700;color:var(--accent-700);box-shadow:inset 3px 0 var(--accent)}
+  .shot .rail .i em{margin-left:auto;font-style:normal;font-size:10px;color:var(--n600)}
+  .shot .rail .i em.c{background:var(--accent);color:#fff;padding:0 5px;font-weight:700}
+  .shot .main{flex:1;min-width:0;padding:12px 14px}
+  .shot .main h4{font:800 14px var(--font);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .shot .kpi{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--divider);border-bottom:1px solid var(--divider);margin-bottom:12px}
+  .shot .kpi div{padding:8px 10px 8px 0}
+  .shot .kpi div+div{border-left:1px solid var(--divider);padding-left:10px}
+  .shot .kpi label{display:block;font-size:9px;text-transform:uppercase;color:var(--n600);letter-spacing:.06em}
+  .shot .kpi b{display:block;font:800 14px var(--font);white-space:nowrap}
+  .shot .kpi span{font-size:10px;color:var(--n700)}
+  .shot .kpi .hot{background:var(--accent-100);padding-left:10px}
+  .shot .kpi .hot b,.shot .kpi .hot label{color:var(--accent-700)}
+  .shot table{width:100%;border-collapse:collapse;font-size:11px}
+  .shot th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--n600);padding:4px 0;border-bottom:2px solid var(--divider)}
+  .shot td{padding:6px 0;border-bottom:1px solid var(--divider);vertical-align:middle;white-space:nowrap}
+  .shot td.prog{width:40%}
+  .prog .bars{display:flex;gap:2px;margin-bottom:3px}
+  .prog .bars i{flex:1;height:5px;background:var(--n300)}
+  .prog .bars i.d{background:var(--accent)}
+  .prog .bars i.f{background:var(--n800)}
+  .prog small{font-weight:700;font-size:10px}
+  .shot td .tag{font-size:9px;padding:1px 6px}
+
+  /* ── 세 가지 문제 ── */
+  .three{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0;border-top:2px solid var(--divider)}
+  .three article{padding:28px 28px 32px 0;border-bottom:1px solid var(--divider)}
+  .three article+article{border-left:1px solid var(--divider);padding-left:28px}
+  .three q{display:block;quotes:"“" "”";font:800 21px/1.35 var(--font);margin-bottom:14px}
+  .three q::before{content:open-quote}.three q::after{content:close-quote}
+  .three p{color:var(--n800);margin-bottom:16px}
+  .three .ans{border-top:2px solid var(--accent);padding-top:12px;font-weight:700}
+  .three .ans span{display:block;font-weight:400;color:var(--n800);margin-top:4px}
+
+  /* ── 업무 목록(레일과 같은 모양) ── */
+  .work{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:48px;align-items:start}
+  .work .intro p{margin-top:16px;color:var(--n800)}
+  .worklist{border-top:2px solid var(--divider)}
+  .worklist .row{display:grid;grid-template-columns:230px 1fr;gap:20px;padding:16px 0;border-bottom:1px solid var(--divider)}
+  .worklist .row b{font:800 15px var(--font);display:flex;align-items:center;gap:8px}
+  .worklist .row b::before{content:"";width:3px;height:18px;background:var(--accent);flex:0 0 auto}
+  .worklist .row p{color:var(--n800)}
+  .worklist .row .who{font-size:12px;color:var(--n700);margin-top:6px}
+  .worklist .row.soon b::before{background:var(--n400)}
+  .worklist .row.soon b{color:var(--n700)}
+
+  /* ── 원칙 ── */
+  .principles{background:var(--surface)}
+  .plist{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));border-top:2px solid var(--divider);border-bottom:2px solid var(--divider)}
+  .plist div{padding:20px 20px 24px 0;border-bottom:1px solid var(--divider)}
+  .plist div+div{border-left:1px solid var(--divider);padding-left:20px}
+  .plist b{display:block;font:800 16px var(--font);margin-bottom:8px}
+  .plist p{font-size:14px;color:var(--n800)}
+
+  /* ── 도입 절차(순서가 있는 내용) ── */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));border:1px solid var(--divider)}
+  .steps>div{padding:18px 20px;border-right:1px solid var(--divider)}
+  .steps>div:last-child{border-right:0}
+  .steps .n{font:800 11px var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--n600)}
+  .steps b{display:block;font:800 16px var(--font);margin:8px 0 6px}
+  .steps p{font-size:14px;color:var(--n800)}
+  .steps .you{font-size:12px;color:var(--accent-700);font-weight:700;margin-top:10px}
+
+  /* ── 무료 세 가지 ── */
+  .free{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+  .free article{border:2px solid var(--divider);padding:24px}
+  .free article b{display:block;font:800 18px var(--font);margin-bottom:10px}
+  .free article p{color:var(--n800);margin-bottom:18px;min-height:3.1em}
+  .free .need{font-size:12px;color:var(--n700);margin-bottom:14px}
+  .free .switch{border-color:var(--accent);background:var(--accent-100)}
+  .free .switch b{color:var(--accent-700)}
+
+  /* ── 문의 ── */
+  .contact{background:var(--n800);color:var(--bg)}
+  .contact h2{color:var(--bg)}
+  .contact .grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:48px;align-items:start}
+  .contact p{color:var(--n300);margin-top:14px}
+  .contact .form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .contact .form .full{grid-column:1/-1}
+  .field label{display:block;font:700 12px var(--font);margin-bottom:6px;color:var(--n300)}
+  .field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--n600);background:var(--bg);color:var(--ink);font:400 14px var(--font)}
+  .field textarea{min-height:88px;resize:vertical}
+  .contact .btn-primary{margin-top:4px}
+  .contact .info{margin-top:28px;border-top:1px solid var(--n600);padding-top:16px;font-size:13px;color:var(--n300);line-height:1.8}
+  .contact .info b{color:var(--bg)}
+
+  footer{padding:24px 0 40px;font-size:12px;color:var(--n700);display:flex;gap:24px;flex-wrap:wrap;border-top:2px solid var(--divider)}
+  footer .l{margin-right:auto}
+
+  /* ── 메뉴 버튼(모바일 전용) ── */
+  .menu-btn{display:none;margin-left:auto;padding:8px 12px;font:700 14px var(--font);border:1px solid var(--divider);background:transparent;color:var(--ink);cursor:pointer}
+  .mnav{display:none}
+  .mnav.open{display:block;border-top:2px solid var(--divider);background:var(--bg)}
+  .mnav a{display:block;padding:14px 28px;font-weight:700;border-bottom:1px solid var(--divider)}
+  .mnav a:last-child{background:var(--accent);color:var(--bg);border:0}
+  .sticky-cta{display:none}
+
+  @media (max-width:900px){
+    html{scroll-padding-top:70px}
+    body{font-size:15px;padding-bottom:64px}
+    section{padding:44px 0}
+    .wrap{padding:0 20px}
+    h1{font-size:28px;line-height:1.25}
+    h2{font-size:23px}
+    /* 상단 바 */
+    nav,.topbar .actions{display:none}
+    .topbar{padding:12px 0;gap:12px}
+    .menu-btn{display:inline-block}
+    /* 히어로 */
+    .hero{padding:40px 0 36px}
+    .hero-grid,.work,.contact .grid{grid-template-columns:1fr;gap:32px}
+    .hero .kicker{font-size:12px;margin-bottom:12px}
+    .hero p.lead{font-size:15.5px;margin:16px 0 22px}
+    .hero .cta{flex-direction:column}
+    .hero .cta .btn{justify-content:center;width:100%;padding:14px 20px;font-size:15px}
+    .hero .facts{grid-template-columns:1fr;margin-top:28px;border-bottom:0}
+    .hero .facts div{display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--divider)}
+    .hero .facts div+div{border-left:0;padding-left:0}
+    .hero .facts b{font-size:16px}
+    /* 화면 축소본 — 레일·표는 숨기고 상태 스트립 + 지표 4칸(2×2)만 */
+    .shot .bar .r,.shot .rail,.shot table{display:none}
+    .shot .bar{padding:10px 12px;gap:8px}
+    .shot .bar .caption{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .shot .strip{padding:9px 12px;gap:8px;flex-wrap:wrap}
+    .shot .strip .m{white-space:normal;flex:1 1 100%;order:3;font-size:12px}
+    .shot .strip .b{order:2;margin-left:auto}
+    .shot .main{padding:12px}
+    .shot .kpi{grid-template-columns:1fr 1fr;margin-bottom:0;border-bottom:0}
+    .shot .kpi div{padding:8px 10px 8px 0;border-bottom:1px solid var(--divider)}
+    .shot .kpi div:nth-child(odd){border-left:0;padding-left:0}
+    .shot .kpi div:nth-child(even){padding-left:10px}
+    .shot .kpi div:nth-child(n+3){border-bottom:0}
+    .shot::after{content:"실제 화면의 일부입니다. PC에서는 업무 목록과 진행 표가 함께 보입니다.";display:block;padding:8px 12px;font-size:11px;color:var(--n700);border-top:1px solid var(--divider)}
+    /* 세 가지 문제 · 원칙 · 단계 · 무료 */
+    .three article+article,.plist div+div{border-left:0;padding-left:0}
+    .three article{padding:22px 0}
+    .three q{font-size:18px}
+    .plist{grid-template-columns:1fr}
+    .plist div{padding:16px 0}
+    .worklist .row{grid-template-columns:1fr;gap:6px;padding:14px 0}
+    .steps{grid-template-columns:1fr}
+    .steps>div{border-right:0;border-bottom:1px solid var(--divider)}
+    .steps>div:last-child{border-bottom:0}
+    .free{grid-template-columns:1fr;gap:14px}
+    .free article{padding:18px}
+    .free article p{min-height:0}
+    .free .btn{width:100%;justify-content:center}
+    /* 문의 */
+    .contact .form{grid-template-columns:1fr;gap:12px}
+    .contact .form .btn{width:100%;justify-content:center;padding:14px}
+    .contact .info{font-size:14px}
+    footer{flex-direction:column;gap:10px;padding-bottom:80px}
+    /* 하단 고정 CTA */
+    .sticky-cta{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;border-top:2px solid var(--divider);background:var(--bg)}
+    .sticky-cta a{flex:1;text-align:center;padding:14px 8px;font:700 14px var(--font);white-space:nowrap}
+    .sticky-cta a+a{border-left:1px solid var(--divider)}
+    .sticky-cta a.p{background:var(--accent);color:var(--bg)}
+  }
+  @media (max-width:360px){
+    h1{font-size:25px}
+    .hero .facts b{font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap topbar">
+    <a class="brand" href="#top" aria-label="WIKI 퇴직연금 홈">
+      <b>WIKI 퇴직연금</b>
+      <span>Wikisoft pension system</span>
+    </a>
+    <nav aria-label="주요 메뉴">
+      <a href="#problems">왜 필요한가</a>
+      <a href="#work">할 수 있는 업무</a>
+      <a href="#how">도입 절차</a>
+      <a href="#free">무료로 받기</a>
+    </nav>
+    <div class="actions">
+      <a class="btn" href="#contact">데모 요청</a>
+      <a class="btn btn-primary" href="#login">로그인</a>
+    </div>
+    <button class="menu-btn" type="button" id="menuBtn" aria-expanded="false" aria-controls="mnav">메뉴</button>
+  </div>
+  <div class="mnav" id="mnav">
+    <a href="#problems">왜 필요한가</a>
+    <a href="#work">할 수 있는 업무</a>
+    <a href="#how">도입 절차</a>
+    <a href="#free">무료로 받기</a>
+    <a href="#contact">데모 요청</a>
+    <a href="#login">로그인</a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ═══════ 히어로 ═══════ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="kicker">보험계리법인이 직접 만든 퇴직연금 관리 시스템</div>
+      <h1>결산, 재정검증, 부담금 납입,<br>가입자 교육까지.<br>퇴직연금 업무를 한 화면에서 챙깁니다.</h1>
+      <p class="lead">직원 명부를 올리면 K-IFRS 제1019호 퇴직급여채무 산출부터 감사 대응 자료까지 시스템 안에서 끝납니다. 담당자는 숫자가 왜 이렇게 나왔는지 직접 확인하고, 다가오는 법정 기한은 시스템이 먼저 알려줍니다.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#free">무료 산출 샘플 받기</a>
+        <a class="btn" href="#contact">데모 화면 보기</a>
+      </div>
+      <div class="facts" aria-label="핵심 사실">
+        <div><b>계리사 서명</b><span>보고서는 보험계리법인 명의로 발행</span></div>
+        <div><b>사번만 받습니다</b><span>이름·주민번호 없이 산출</span></div>
+        <div><b>DB · DC 함께</b><span>병행 제도도 한 계정</span></div>
+      </div>
+    </div>
+
+    <!-- 실제 화면과 같은 규칙으로 그린 축소본 -->
+    <div class="shot" role="img" aria-label="WIKI 퇴직연금 기업 담당자 화면 예시">
+      <div class="bar">
+        <b>㈜ 가나전자</b><span class="caption">사업자 123-45-67890 · 결산월 12월</span>
+        <div class="r"><i>백업 내려받기</i><i>로그아웃</i></div>
+      </div>
+      <div class="strip">
+        <span class="k">조치 필요</span>
+        <span class="m">[1012] 2025-12-31 — 계리사가 자료 보완을 요청했습니다. 중간정산 기준일 5명</span>
+        <span class="b">지금 처리</span>
+      </div>
+      <div class="body">
+        <div class="rail">
+          <div class="h">사용 중인 업무</div>
+          <div class="i on">진행건 조회<em class="c">1</em></div>
+          <div class="i">부채계산 신청</div>
+          <div class="i">재정검증 · 부담금</div>
+          <div class="i">DC 부담금 · 납부<em>미납 2</em></div>
+          <div class="i">법정 의무 캘린더<em>임박 3</em></div>
+          <div class="i">ALM · 자산부채</div>
+          <div class="i">운용계획서 · 위원회</div>
+          <div class="i">퇴직금 지급액 산정</div>
+          <div class="i">질의응답<em>대기 1</em></div>
+          <div class="h" style="margin-top:6px">준비 중인 업무</div>
+          <div class="i" style="color:var(--n600)">감사인 열람 계정</div>
+        </div>
+        <div class="main">
+          <h4>진행건 조회 <span class="tag">조회</span></h4>
+          <div class="kpi">
+            <div><label>최근 확정 DBO</label><b>18,462백만</b><span>2025-12-31</span></div>
+            <div><label>당기근무원가</label><b>1,973백만</b><span>전년 +4.1%</span></div>
+            <div class="hot"><label>적립비율</label><b>91.4%</b><span>최소적립금 대비</span></div>
+            <div><label>다음 산출기준일</label><b>2026-12-31</b><span>자료 제출 1월</span></div>
+          </div>
+          <table>
+            <thead><tr><th>번호</th><th>기준일</th><th>산출목적</th><th>진행 상태</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>1012</td><td>2025-12-31</td><td>결산 · IFRS 1019</td>
+                  <td class="prog"><div class="bars"><i class="d"></i><i class="d"></i><i></i><i></i><i></i></div><small>자료 보완 요청</small></td>
+                  <td><span class="tag tag-accent">조치</span></td></tr>
+              <tr><td>1009</td><td>2025-06-30</td><td>반기 · 기중평가</td>
+                  <td class="prog"><div class="bars"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div><small>보고 완료</small></td>
+                  <td><span class="tag">보고서</span></td></tr>
+              <tr><td>1003</td><td>2024-12-31</td><td>결산 · IFRS 1019</td>
+                  <td class="prog"><div class="bars"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div><small>보고 완료</small></td>
+                  <td><span class="tag">보고서</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 세 가지 문제 ═══════ -->
+<section id="problems">
+  <div class="wrap">
+    <h2>담당자들이 매년 같은 자리에서 막힙니다.</h2>
+    <p class="caption" style="margin:10px 0 28px">인사·재무 실무자에게 들은 세 가지. 계리 지식이 없어도 풀리게 만들었습니다.</p>
+    <div class="three">
+      <article>
+        <q>숫자가 왜 이렇게 나왔는지 감사인이 묻는데, 우리도 모릅니다.</q>
+        <p>외부 계리법인에 의뢰해 결과만 받으면 근거를 설명하기 어렵습니다. 감사인 질문이 오면 다시 계리법인에 묻는 일이 반복됩니다.</p>
+        <div class="ans">계산 근거를 담당자가 직접 봅니다.<span>인별 산출 내역, 기초율 출처, 전기 대비 변동 분해가 화면에 있습니다. 감사인이 통상 묻는 항목에 미리 답한 질문지가 보고서와 함께 나옵니다.</span></div>
+      </article>
+      <article>
+        <q>올해 가입자 교육, 했던가?</q>
+        <p>가입자 교육, DC 부담금 납입기일, 재정검증 결과 통보, 적립금운용위원회. 사업자 안내 메일과 작년 메모에 흩어져 있어 하나씩 챙기다 보면 빠집니다.</p>
+        <div class="ans">법정 기한을 시스템이 먼저 챙깁니다.<span>결산월·제도 유형·인원으로 연간 일정표를 만들고, 임박·경과 항목을 메일로 알립니다. Outlook·Google 캘린더로 가져갈 수 있습니다.</span></div>
+      </article>
+      <article>
+        <q>전임자 엑셀을 열었는데 무슨 숫자인지 모르겠습니다.</q>
+        <p>퇴직연금 업무는 1년에 몇 번만 집중됩니다. 사업자 사이트 로그인, 지난해 계리평가 자료, 감사인에게 보낸 파일이 개인 PC와 메일함에 남습니다.</p>
+        <div class="ans">기록이 사람이 아니라 시스템에 쌓입니다.<span>산출 이력, 제출 자료, 질의응답, 일정 완료 기록이 회사 계정에 남습니다. 담당자가 바뀌어도 로그인하면 작년 일과 올해 할 일이 보입니다.</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 할 수 있는 업무 ═══════ -->
+<section id="work" style="padding-top:24px">
+  <div class="wrap work">
+    <div class="intro">
+      <h2>할 수 있는 업무</h2>
+      <p>퇴직연금사업자를 대체하지 않습니다. 사업자와 회계법인 사이에서 비어 있던 <b>관리 업무</b>를 맡습니다. 명부(부채)와 적립금(자산)을 한 곳에 갖고 있어 재정검증·ALM·부담금 계획이 같은 숫자로 이어집니다.</p>
+      <p class="caption" style="margin-top:20px">법령 조문·이율·기한은 설정값으로 두고 화면에 근거를 표기합니다. 특정 금융상품은 권하지 않습니다.</p>
+    </div>
+    <div class="worklist">
+      <div class="row"><b>퇴직급여채무 산출</b><div><p>K-IFRS 제1019호 기준 DBO·당기근무원가·기타장기급여·책임준비금. 명부 오류 검증 → 계리사 산출 → 기업 검토 → 보고서 확정. 전년도 보고서를 올리면 전기 가정·금액을 자동 추출해 연결합니다.</p><div class="who">DB형 · 결산·반기·기중평가</div></div></div>
+      <div class="row"><b>감사 대응</b><div><p>계리평가보고서(PDF·Excel), 인별 상세, 조정내역, 감사인 예상질문 답변지. 감사인 열람 계정은 준비 중입니다.</p><div class="who">DB형 · 회계감사</div></div></div>
+      <div class="row"><b>재정검증 · 부담금 시뮬레이션</b><div><p>사업자 통보 전에 최소적립금 대비 적립비율을 미리 봅니다. 미달 회피·최소적립금 도달·세무 손금한도·목표 적립비율, 네 가지 권고안과 연도별 계획.</p><div class="who">DB형 · 근퇴법 제16조 · 법인세법</div></div></div>
+      <div class="row"><b>DC 부담금 · 납부 관리</b><div><p>연간 부담금 산정, 회차별 납부 계획·실적 원장, 미납·지연이자, 납부현황 보고서. 계좌번호는 시스템에 저장하지 않습니다.</p><div class="who">DC형 · 근퇴법 제20조</div></div></div>
+      <div class="row"><b>법정 의무 캘린더</b><div><p>가입자 교육, 부담금 납입, 재정검증 통보 확인, 운용위원회·운용계획서, 퇴직급여 14일 지급. 임박·경과 알림 메일과 .ics 파일.</p><div class="who">DB · DC · 병행</div></div></div>
+      <div class="row"><b>ALM · 적립금운용계획서</b><div><p>부채 듀레이션과 자산 만기를 맞춰 보고, 300인 이상 DB 사업장의 운용계획서 초안(Word)과 위원회 회의자료(PowerPoint)를 같은 숫자로 만듭니다.</p><div class="who">DB형 · 근퇴법 제18조의2</div></div></div>
+      <div class="row"><b>퇴직금 지급액 산정</b><div><p>규정·법정 비교, 누진표·중간정산 반영, 퇴직소득세 참고 계산. 지급 완료 기록은 캘린더에 자동 반영됩니다.</p><div class="who">전 제도</div></div></div>
+      <div class="row soon"><b>그룹사 통합 화면</b><div><p>계열사 여러 곳의 산출·재정검증·의무 현황을 지주사 담당자가 한 화면에서 봅니다.</p><div class="who">준비 중</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 원칙 ═══════ -->
+<section class="principles">
+  <div class="wrap">
+    <h2>시스템이 지키는 다섯 가지</h2>
+    <p class="caption" style="margin:10px 0 28px">계산 엔진과 관리 기능 모두 같은 원칙 위에 있습니다. 감사 대응의 핵심이 "어떤 자료로 이 숫자가 나왔나"이기 때문입니다.</p>
+    <div class="plist">
+      <div><b>재현성</b><p>같은 입력이면 같은 결과가 나옵니다. 산출 옵션과 인별 결과를 함께 저장합니다.</p></div>
+      <div><b>감사 가능성</b><p>누가·언제·무엇을 바꿨는지 원장으로 남기고 지우지 않습니다. 삭제는 취소 기록으로 남습니다.</p></div>
+      <div><b>개인정보 최소화</b><p>명부는 사번만 받습니다. 이름·주민번호 열은 업로드 시 자동 삭제되고, 계좌번호는 마스킹만 저장합니다.</p></div>
+      <div><b>설정 기반</b><p>이율·기한·법령 조문을 코드에 고정하지 않습니다. 법이 바뀌면 설정을 고치고 화면에 근거를 표기합니다.</p></div>
+      <div><b>검증 우선</b><p>모든 산식은 손계산과 대조하고, 화면은 실제로 열고 눌러 검증합니다. 재료가 없으면 예시 숫자를 보여주지 않습니다.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 도입 절차 ═══════ -->
+<section id="how">
+  <div class="wrap">
+    <h2>도입은 네 단계, 첫 결산부터 씁니다.</h2>
+    <p class="caption" style="margin:10px 0 28px">시스템 사용료는 따로 받지 않습니다. 계리평가 용역에 계정이 포함됩니다.</p>
+    <div class="steps">
+      <div><div class="n">1단계</div><b>제도 유형과 결산월</b><p>DB·DC·병행 여부, 결산월, 상시근로자 수. 이 세 가지로 연간 일정표가 먼저 만들어집니다.</p><div class="you">귀사가 할 일 · 5분</div></div>
+      <div><div class="n">2단계</div><b>명부 업로드</b><p>제공되는 양식에 사번·입사일·급여만. 오류는 화면에서 바로 잡히고, 확인이 필요한 행은 계리사에게 전달됩니다.</p><div class="you">귀사가 할 일 · 양식 1개</div></div>
+      <div><div class="n">3단계</div><b>계리사 산출</b><p>기초율·할인율을 확정하고 부채를 산출합니다. 계리사가 자료 보완을 요청하면 화면 상단에 빨간 띠로 표시됩니다.</p><div class="you">WIKI가 할 일</div></div>
+      <div><div class="n">4단계</div><b>검토 · 보고서 · 감사 대응</b><p>기업 담당자가 결과를 검토하고 확정합니다. 보고서와 감사인 질문지를 이메일로 받고, 감사인에게 그대로 전달합니다.</p><div class="you">함께 · 결산 전 완료</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 무료 세 가지 ═══════ -->
+<section id="free" style="padding-top:0">
+  <div class="wrap">
+    <h2>계약 전에 무료로 받아보세요. 바꾸는 부담도 없습니다.</h2>
+    <p class="caption" style="margin:10px 0 28px">산출 샘플과 일정표는 계약 전에 명부 원본을 보관하지 않습니다. 계산 직후 삭제합니다.</p>
+    <div class="free">
+      <article>
+        <b>귀사 데이터로 산출 샘플</b>
+        <p>올해 결산 전에 귀사 명부로 퇴직급여채무를 산출해 결과와 근거 화면을 보여드립니다.</p>
+        <div class="need">필요한 것 · 명부 양식 1개(사번·입사일·급여)</div>
+        <a class="btn btn-primary" href="#contact">산출 샘플 신청</a>
+      </article>
+      <article>
+        <b>퇴직연금 연간 일정표</b>
+        <p>가입자 교육, 부담금 납입, 재정검증, 운용위원회. 귀사 제도 유형에 맞는 올해 일정표를 드립니다.</p>
+        <div class="need">필요한 것 · 제도 유형(DB/DC)과 결산월</div>
+        <a class="btn btn-primary" href="#contact">일정표 신청</a>
+      </article>
+      <article class="switch">
+        <b>계리법인 변경, 작년 보고서만 있으면 됩니다</b>
+        <p>전년도 계리평가보고서(PDF)와 인별 내역을 올리면 전 계리법인의 가정과 금액을 시스템이 자동으로 읽어 옵니다. 할인율·임금상승률·전기말 DBO·재측정 내역이 올해 산출과 전기 대비 변동 분석에 그대로 이어집니다.</p>
+        <div class="need">필요한 것 · 작년 보고서 + 인별 산출내역(있으면)</div>
+        <a class="btn" href="#contact">변경 절차 문의</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 문의 ═══════ -->
+<section class="contact" id="contact">
+  <div class="wrap grid">
+    <div>
+      <h2>데모 요청 · 문의</h2>
+      <p>담당 계리사가 영업일 기준 1일 안에 연락드립니다. 데모는 화면 공유로 30분, 귀사 제도 유형에 맞춰 보여드립니다.</p>
+      <div class="info">
+        <b>WIKI 퇴직연금 · 위키소프트</b><br>
+        전화 <b>02-0000-0000</b> (평일 09:00–18:00)<br>
+        이메일 <b>pension@wikisoft.example</b><br>
+        주소 서울특별시 ○○구 ○○로 00, 0층
+      </div>
+    </div>
+    <div class="form">
+      <div class="field"><label for="f-name">담당자 성함</label><input id="f-name" type="text" placeholder="홍길동"></div>
+      <div class="field"><label for="f-co">회사명</label><input id="f-co" type="text" placeholder="㈜ 가나전자"></div>
+      <div class="field"><label for="f-mail">이메일</label><input id="f-mail" type="email" placeholder="manager@company.com"></div>
+      <div class="field"><label for="f-tel">연락처</label><input id="f-tel" type="tel" placeholder="010-0000-0000"></div>
+      <div class="field"><label for="f-plan">제도 유형</label>
+        <select id="f-plan"><option>DB형</option><option>DC형</option><option>DB·DC 병행</option><option>도입 검토 중</option></select></div>
+      <div class="field"><label for="f-want">원하는 것</label>
+        <select id="f-want"><option>데모 화면 보기</option><option>무료 산출 샘플</option><option>연간 일정표</option><option>계리법인 변경 상담</option><option>기타 문의</option></select></div>
+      <div class="field full"><label for="f-memo">메모 (선택)</label><textarea id="f-memo" placeholder="결산월, 인원 규모, 현재 이용 중인 사업자 등"></textarea></div>
+      <div class="full"><button class="btn btn-primary" type="button" id="send">문의 보내기</button> <span class="caption" style="color:var(--n400);margin-left:10px" id="sent"></span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="sticky-cta" aria-label="빠른 문의">
+  <a href="#contact">데모 요청</a>
+  <a class="p" href="#free">무료 산출 샘플 받기</a>
+</div>
+
+<footer class="wrap">
+  <span class="l">© 2026 위키소프트 · 보험계리법인. 이 시스템의 알림·시뮬레이션은 법률·세무 자문이 아닙니다. 근거 조문과 규약을 확인하세요.</span>
+  <a href="#">개인정보처리방침</a>
+  <a href="#">이용약관</a>
+  <a href="#login" id="login">로그인</a>
+</footer>
+
+<script>
+  var mb=document.getElementById('menuBtn'), mn=document.getElementById('mnav');
+  mb.addEventListener('click',function(){var o=mn.classList.toggle('open');mb.setAttribute('aria-expanded',o);mb.textContent=o?'닫기':'메뉴';});
+  mn.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){mn.classList.remove('open');mb.setAttribute('aria-expanded','false');mb.textContent='메뉴';});});
+  // 정적 시안 — 실제 전송은 폼 백엔드 연결 후. 여기서는 접수 문구만 표시한다.
+  document.getElementById('send').addEventListener('click', function(){
+    document.getElementById('sent').textContent = '접수되었습니다. 담당 계리사가 연락드립니다.';
+  });
+</script>
+</body>
+</html>
